@@ -1,8 +1,13 @@
-# 3.4.ps1 - Настройка сети на VM4
+# --- Interface Configuration (connects to 10.9.19.0/24) ---
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 10.9.19.4 -PrefixLength 24 -DefaultGateway 10.9.19.3
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses "94.232.137.104", "94.232.137.105"
 
-# Настройка интерфейса для сети 10.9.19.0/24 со шлюзом на VM3
-Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | New-NetIPAddress -IPAddress 10.9.19.4 -PrefixLength 24 -DefaultGateway 10.9.19.3
-Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | Restart-NetAdapter
+# --- Add Static Route to reach the other internal subnet via VM1 ---
+New-NetRoute -InterfaceAlias "Ethernet" -DestinationPrefix "10.9.12.0/24" -NextHop 10.9.19.1
 
-# Отключение брандмауэра
+# --- Restart Adapter ---
+Restart-NetAdapter -InterfaceAlias "Ethernet"
+
+# --- Disable Firewall ---
 Set-NetFirewallProfile -Profile Domain, Private, Public -Enabled False
+

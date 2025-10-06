@@ -1,8 +1,10 @@
-# 3.2.ps1 - Настройка сети на VM2
+# --- Interface Configuration (connects to 10.9.12.0/24) ---
+New-NetIPAddress -InterfaceAlias "Ethernet 2" -IPAddress 10.9.12.2 -PrefixLength 24 -DefaultGateway 10.9.12.1
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet 2" -ServerAddresses "94.232.137.104", "94.232.137.105"
 
-# Настройка интерфейса для сети 10.9.12.0/24 (шлюз указан на VM3)
-Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | New-NetIPAddress -IPAddress 10.9.12.2 -PrefixLength 24 -DefaultGateway 10.9.12.3
-Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | Restart-NetAdapter
+# --- Restart Adapter ---
+Restart-NetAdapter -InterfaceAlias "Ethernet 2"
 
-# Отключение брандмауэра
+# --- Disable Firewall ---
 Set-NetFirewallProfile -Profile Domain, Private, Public -Enabled False
+

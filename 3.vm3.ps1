@@ -1,19 +1,14 @@
-# 3.3.ps1 - Настройка сети на VM3 (NAT)
+# --- Configuration for the internal interface (connects to 10.9.19.0/24) ---
+# We assume "Ethernet 2" is the external (DHCP) adapter and "Ethernet 3" is the internal one.
+New-NetIPAddress -InterfaceAlias "Ethernet 2" -IPAddress 10.9.19.3 -PrefixLength 24
+Restart-NetAdapter -InterfaceAlias "Ethernet 2"
 
-# Настройка внутреннего интерфейса для сети 10.9.19.0/24
-# (Предполагается, что внутренний интерфейс не имеет настроенного IP)
-Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | ForEach-Object {
-    if ((Get-NetIPConfiguration -InterfaceIndex $_.ifIndex).IPv4Address.IPAddress -notlike "169.254.*") {
-        # Пропускаем, если это внешний адаптер с IP
-    } else {
-        # Настраиваем внутренний адаптер
-        New-NetIPAddress -InterfaceIndex $_.ifIndex -IPAddress 10.9.19.3 -PrefixLength 24
-        Restart-NetAdapter -InterfaceIndex $_.ifIndex
-    }
-}
-
-# Включение IP-форвардинга
+# --- Enable IP Forwarding ---
 Set-NetIPInterface -Forwarding Enabled
 
-# Отключение брандмауэра
+# --- Add Static Route to reach the other internal subnet via VM1 ---
+New-NetRoute -InterfaceAlias "Ethernet 2" -DestinationPrefix "10.9.12.0/24" -NextHop 10.9.19.1
+
+# --- Disable Firewall ---
 Set-NetFirewallProfile -Profile Domain, Private, Public -Enabled False
+
